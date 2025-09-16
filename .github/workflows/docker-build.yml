@@ -1,0 +1,69 @@
+name: Build and Deploy Docker to ECR & ECS
+
+on:
+  push:
+    branches:
+      - main
+      - staging
+  pull_request:
+    branches:
+      - main
+      - staging
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    env:
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      ECR_REPO: ${{ secrets.ECR_REPO }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Set IMAGE_TAG based on branch
+        id: set-tag
+        run: |
+          if [[ "${GITHUB_REF_NAME}" == "main" ]]; then
+            echo "IMAGE_TAG=${GITHUB_SHA}" >> $GITHUB_ENV
+            echo "ECS_SERVICE=express-api-service-prod" >> $GITHUB_ENV
+          else
+            echo "IMAGE_TAG=latest" >> $GITHUB_ENV
+            echo "ECS_SERVICE=express-api-service-staging" >> $GITHUB_ENV
+          fi
+
+      - name: Build Docker image
+        run: |
+          docker build -t express-api:${IMAGE_TAG} .
+          docker tag express-api:${IMAGE_TAG} ${{ env.ECR_REPO }}:${IMAGE_TAG}
+
+      - name: Push Docker image to ECR
+        run: |
+          docker push ${{ env.ECR_REPO }}:${IMAGE_TAG}
+
+      # - name: Update ECS service
+      #   run: |
+      #     echo "Updating ECS service ${ECS_SERVICE} with image tag ${IMAGE_TAG}"
+      #     # Crée une nouvelle révision de la task definition avec la nouvelle image
+      #     TASK_DEF=$(aws ecs register-task-definition \
+      #       --cli-input-json "$(aws ecs describe-task-definition --task-definition express-api-task | jq '.taskDefinition | del(.status,.revision,.taskDefinitionArn,.requiresAttributes,.compatibilities,.registeredAt,.registeredBy,.pendingCount,.runningCount) | .containerDefinitions[0].image=\"'"${ECR_REPO}:${IMAGE_TAG}"'\"' )" \
+      #       | jq -r '.taskDefinition.taskDefinitionArn')
+
+      #     aws ecs update-service \
+      #       --cluster my-ecs-cluster \
+      #       --service $ECS_SERVICE \
+      #       --task-definition $TASK_DEF \
+      #       --force-new-deployment \
+      #       --region ${{ env.AWS_REGION }}

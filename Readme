@@ -1,0 +1,69 @@
+# Projet Express + MySQL avec Docker Compose
+
+Ce projet contient une API Express connectée à une base MySQL. Tout est containerisé avec Docker et orchestré avec Docker Compose.
+
+## 📂 Structure du projet
+
+├── app.js # Code principal de l'API Express
+├── package.json # Dépendances Node.js
+├── Dockerfile # Image Docker pour l'API
+├── docker-compose.yml # Définition des services Docker
+├── .env # Variables d'environnement pour l'API
+├── init.sql # Script d'initialisation de la DB
+└── README.md # Ce fichier
+
+---
+
+## ⚙️ Prérequis
+
+- [Docker](https://www.docker.com/get-started) installé
+- [Docker Compose](https://docs.docker.com/compose/install/) installé
+- Node.js et npm (pour installer les dépendances locales si besoin)
+
+---
+
+## 🔧 Configuration
+
+### Variables d'environnement
+
+#### Pour l'API (`.env`)
+
+env
+PORT=4000
+NODE_ENV=development
+DB_HOST=mysql
+DB_PORT=3306
+DB_USER=myuser
+DB_PASSWORD=mypassword
+DB_NAME=mydb
+
+**🚀Lancer le projet en développement**
+
+## Installer les dépendances Node.js localement :
+
+npm install
+
+## Construire et lancer les containers avec Docker Compose :
+
+docker-compose up --build
+
+## Endpoints disponibles
+
+GET / → Accueil
+
+GET /users → Liste des utilisateurs depuis MySQL
+
+[
+{ "id": 1, "name": "Alice" },
+{ "id": 2, "name": "Bob" }
+]
+
+GET /status → Status du serveur
+
+GET /health → Vérifie si le serveur est alive
+
+## 🧹 Nettoyer
+
+Pour arrêter et supprimer les containers, volumes et réseaux associés :
+
+docker-compose down -v
