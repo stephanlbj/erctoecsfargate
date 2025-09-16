@@ -1,0 +1,24 @@
+# Node modules (reinstallés dans l'image)
+node_modules
+
+# Logs
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+logs
+*.log
+
+# OS files
+.DS_Store
+
+# Environment variables
+.env
+
+# Test / dev files
+tests
+*.test.js
+*.spec.js
+
+# Git
+.git
+.gitignore
